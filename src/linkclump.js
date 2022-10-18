@@ -18,6 +18,7 @@ var mouse_x = -1;
 var mouse_y = -1;
 var scroll_id = 0;
 var links = [];
+var prices = [];
 var box = null;
 var count_label = null;
 var overlay = null;
@@ -27,7 +28,7 @@ var timer = 0;
 
 chrome.extension.sendMessage({
 	message: "init"
-}, function(response) {
+}, function (response) {
 	if (response === null) {
 		console.log("Unable to load linkclump due to null response");
 	} else {
@@ -58,7 +59,7 @@ chrome.extension.sendMessage({
 	}
 });
 
-chrome.extension.onMessage.addListener(function(request, sender, callback) {
+chrome.extension.onMessage.addListener(function (request, sender, callback) {
 	if (request.message === "update") {
 		this.settings = request.settings.actions;
 	}
@@ -227,7 +228,7 @@ function mouseup(event) {
 	if (this.box_on) {
 		// all the detection of the mouse to bounce
 		if (this.allow_selection() && this.timer === 0) {
-			this.timer = setTimeout(function() {
+			this.timer = setTimeout(function () {
 				this.update_box(event.pageX, event.pageY);
 				this.detech(event.pageX, event.pageY, true);
 
@@ -445,6 +446,12 @@ function detech(x, y, open) {
 					"url": this.links[i].href,
 					"title": this.links[i].innerText
 				});
+
+				var price = this.links[i].innerText.split(/\r?\n/)[0];
+				price = price.replace('*', '');
+				if (!price.includes('$')) price = '';
+				//console.log(price);
+				prices.push(price);
 			}
 
 			// check if important links have been selected and possibly redo
@@ -499,9 +506,38 @@ function detech(x, y, open) {
 			urls: open_tabs,
 			setting: this.settings[this.setting]
 		});
+
+		copyTextToClipboard(prices.toString().replaceAll(',', '\n'));
+		prices = [];
 	}
 
 	return true;
+}
+
+function copyTextToClipboard(text) {
+	//Create a textbox field where we can insert text to. 
+	var copyFrom = document.createElement("textarea");
+
+	//Set the text content to be the text you wished to copy.
+	copyFrom.textContent = text;
+
+	//Append the textbox field into the body as a child. 
+	//"execCommand()" only works when there exists selected text, and the text is inside 
+	//document.body (meaning the text is part of a valid rendered HTML element).
+	document.body.appendChild(copyFrom);
+
+	//Select all the text!
+	copyFrom.select();
+
+	//Execute command
+	document.execCommand('copy');
+
+	//(Optional) De-select the text using blur(). 
+	copyFrom.blur();
+
+	//Remove the textbox field from the document.body, so no other JavaScript nor 
+	//other elements can get access to this.
+	document.body.removeChild(copyFrom);
 }
 
 function allow_key(keyCode) {
