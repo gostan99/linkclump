@@ -447,9 +447,10 @@ function detech(x, y, open) {
 					"title": this.links[i].innerText
 				});
 
-				var price = this.links[i].innerText.split(/\r?\n/)[0];
+				var price = '';
+				var priceElement = this.links[i].getElementsByClassName("DdKZJb")[0];
+				if (priceElement) price = priceElement.innerText.split(/\r?\n/)[0];
 				price = price.replace('*', '');
-				if (!price.includes('$')) price = '';
 				//console.log(price);
 				prices.push(price);
 			}
